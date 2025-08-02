@@ -38,7 +38,9 @@ Common errors
 - Not creating an output directory, or not having write permissions to the directory
 
 Tools
-- ...
+- mcp_generate_image
+- mcp_generate_image_with_colors
+(Most up to date list of tools here: https://github.com/awslabs/mcp/blob/main/src/nova-canvas-mcp-server/awslabs/nova_canvas_mcp_server/server.py)
 
 References
 - Github: https://github.com/awslabs/mcp/tree/main/src/nova-canvas-mcp-server
