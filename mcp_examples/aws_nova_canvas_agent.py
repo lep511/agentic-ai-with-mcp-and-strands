@@ -88,10 +88,10 @@ PWD = os.getenv('PWD', os.getcwd())
 BEDROCK_REGION = os.getenv("BEDROCK_REGION", 'us-east-1')
 BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "us.amazon.nova-lite-v1:0")
 BEDROCK_CANVAS_MODEL_ID = os.getenv("BEDROCK_CANVAS_MODEL_ID", "us.amazon.bedrock-nova-canvas-v1:0")
-# AWS_API_MCP_WORKING_DIR = os.getenv('AWS_API_MCP_WORKING_DIR', os.path.join(PWD, "api_mcp_server"))
+AWS_API_MCP_WORKING_DIR = os.getenv('AWS_API_MCP_WORKING_DIR', os.path.join(PWD, "output"))
 
 # Ensure working directory exists
-# os.makedirs(AWS_API_MCP_WORKING_DIR, exist_ok=True)
+os.makedirs(AWS_API_MCP_WORKING_DIR, exist_ok=True)
 
 def create_mcp_client() -> MCPClient:
     """Create an MCP client for the AWS Nova Canvas MCP Server.
@@ -155,6 +155,8 @@ Use the available tools to:
 - Configure image dimensions, quality and other parameters
 - Save generated images to workspace directories
 - Apply negative prompting and other advanced features
+
+The output folder should be "./output", but if errors are encountered, use the current folder.
 
 Provide accurate guidance on using AWS Nova Canvas for image generation tasks.
 """
