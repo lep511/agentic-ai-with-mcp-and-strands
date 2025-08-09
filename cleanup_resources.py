@@ -48,6 +48,11 @@ def delete_all_knowledgebases():
 
     kb_response = bedrock.list_knowledge_bases()
     for kb in kb_response['knowledgeBaseSummaries']:
+        confirm = input(f"Are you sure you want to delete knowledge base: {kb['name']} ({kb['knowledgeBaseId']})? [y/N]: ")
+        if confirm.lower() != 'y':
+            print(f"Skipping deletion of knowledge base: {kb['name']}")
+            continue
+            
         print(f"Deleting knowledge base: {kb['name']} ({kb['knowledgeBaseId']})")
         try:
             bedrock.delete_knowledge_base(knowledgeBaseId=kb['knowledgeBaseId'])
@@ -83,6 +88,11 @@ def delete_lab_s3_buckets(bucket_prefix):
         bucket_name = bucket['Name']
         if not bucket_name.startswith(bucket_prefix):
             print(f"Skipping bucket: {bucket_name}")
+            continue
+
+        confirm = input(f"Are you sure you want to delete bucket: {bucket_name}? [y/N]: ")
+        if confirm.lower() != 'y':
+            print(f"Skipping deletion of bucket: {bucket_name}")
             continue
 
         print(f"Deleting bucket: {bucket_name}")
