@@ -98,10 +98,20 @@ weather_agent = Agent(
 app = BedrockAgentCoreApp()
 
 @app.entrypoint
-def invoke_agent(payload):
-    user_input = payload.get("prompt")
-    response = weather_agent(user_input)
-    return response
+async def invoke_agent(payload):
+    """
+    Handler for agent invocation with a streaming response
+    """
+    prompt = payload.get("prompt")
+    # Without Streaming
+    # response = weather_agent(user_input)
+    # return response
+
+    # With Streaming
+    stream = weather_agent.stream_async(prompt)
+    async for event in stream:
+        print(event)
+        yield (event)
 
 if __name__ == "__main__":
     app.run()
