@@ -64,3 +64,4 @@ if __name__ == "__main__":
         agent_name = args.agent_name,
         entry_point = args.entry_point
     )
+    wait_for_status()
