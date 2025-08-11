@@ -53,7 +53,7 @@ echo "Bearer Token: $BEARER_TOKEN"
 # Save the variables POOL_ID, Discovery URL, CLIENT_ID, and BEARER_TOKEN in `.env`
 cat << EOF > .env
 POOL_ID=$POOL_ID
-DISCOVERY_URL=https://cognito-idp.us-east-1.amazonaws.com/$POOL_ID/.well-known/openid-configuration
+DISCOVERY_URL=https://cognito-idp.$AWS_REGION.amazonaws.com/$POOL_ID/.well-known/openid-configuration
 CLIENT_ID=$CLIENT_ID
 BEARER_TOKEN=$BEARER_TOKEN
 EOF
