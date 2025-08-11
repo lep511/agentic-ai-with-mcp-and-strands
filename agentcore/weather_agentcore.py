@@ -63,6 +63,7 @@ Strands Agents' http_request tool provides:
    - "Get the forecast for San Francisco"
 """
 
+import argparse
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 from strands import Agent
 from strands.models import BedrockModel
@@ -114,4 +115,7 @@ async def invoke_agent(payload):
         yield (event)
 
 if __name__ == "__main__":
-    app.run()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", type=int, default=8080)
+    args = parser.parse_args()
+    app.run(port=args.port)
