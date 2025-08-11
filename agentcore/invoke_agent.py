@@ -1,3 +1,17 @@
+"""
+A script to interact with Amazon Bedrock Agent runtimes.
+
+This script provides functionality to:
+- List available agent runtimes
+- Invoke an agent runtime with a prompt
+- Process and display the agent's response
+
+Requires:
+    - boto3
+    - Valid AWS credentials with appropriate permissions
+    - AWS_REGION environment variable (defaults to us-west-2)
+"""
+
 import argparse
 import boto3
 import json
@@ -30,36 +44,46 @@ def get_agent_runtimes():
 
 def invoke_agent_runtime(agent_arn, payload):
     """
-    Reference: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-invoke-agent.html
+    Invokes an Amazon Bedrock Agent runtime with the specified ARN and payload.
+
+    Args:
+        agent_arn (str): The ARN of the agent runtime to invoke
+        payload (str): JSON payload containing the prompt or other parameters
+
+    Returns:
+        dict: Response from the agent runtime invocation
+
+    Reference:
+    - https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-invoke-agent.html
+    - https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/response-streaming.html
     """
+
     response = agentcore_client.invoke_agent_runtime(
         agentRuntimeArn=agent_arn,
         qualifier="DEFAULT",
         payload=payload
     )
-    print(json.dumps(response, indent=2, default=str))
-    response_stream = response['response']
     if "text/event-stream" in response.get("contentType", ""):
         content = []
-        for line in response_stream.iter_lines(chunk_size=1):
+        for line in response["response"].iter_lines(chunk_size=10):
             if line:
                 line = line.decode("utf-8")
                 if line.startswith("data: "):
                     line = line[6:]
-                    data = json.loads(line)
-                    if isinstance(data, dict):
-                        event = data.get('event', '')
-                        if event:
-                            contentBlockDelta = event.get('contentBlockDelta')
-                            if contentBlockDelta:
-                                delta = contentBlockDelta.get('delta', '')
-                                if delta:
-                                    text = delta.get('text', '')
-                                    if text:
-                                        print(text, end='')
-                            # print(line)
-                    content.append(line)
-        print("\n".join(content))
+                    try:
+                        data = json.loads(line)
+                        if isinstance(data, dict):
+                            event = data.get('event', '')
+                            contentBlockDelta = event.get('contentBlockDelta', '')
+                            delta = contentBlockDelta.get('delta', '')
+                            text = delta.get('text', '')
+                            content.append(text)
+                            print(text, end='')
+                    except Exception as e:
+                        pass
+                    # print(line)
+                    # content.append(line)
+        return ''.join(content)
 
     elif response.get("contentType") == "application/json":
         # Handle standard JSON response
@@ -67,7 +91,7 @@ def invoke_agent_runtime(agent_arn, payload):
         for chunk in response.get("response", []):
             content.append(chunk.decode('utf-8'))
         print(json.loads(''.join(content)))
-    
+        return '\n'.join(content)
     else:
         # Print raw response for other content types
         print(response)
@@ -85,4 +109,5 @@ if __name__ == "__main__":
         agent_arn = runtimes[0]['agentRuntimeArn']
         payload = json.dumps({"prompt": args.prompt})
         print(f'Invoking agent with payload:\n{payload}\n')
-        invoke_agent_runtime(agent_arn, payload)
+        response = invoke_agent_runtime(agent_arn, payload)
+        print()
