@@ -44,6 +44,17 @@ def wait_for_status():
         print(status)
 
 def deploy_agentcore(agent_name, entry_point, requirements_file = 'requirements.txt'):
+    """
+    Deploy an Amazon Bedrock Agent Core runtime with the specified configuration.
+
+    Args:
+        agent_name (str): Name of the agent to deploy
+        entry_point (str): Path to the entry point file for the agent
+        requirements_file (str, optional): Path to requirements.txt file. Defaults to 'requirements.txt'
+
+    Returns:
+        None
+    """
     response = agentcore_runtime.configure(
         entrypoint=entry_point,
         auto_create_execution_role=True,
