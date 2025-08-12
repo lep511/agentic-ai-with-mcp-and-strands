@@ -63,7 +63,7 @@ print(f'Bearer Token: {bearer_token}')
 
 async def main():    
     encoded_arn = agent_arn.replace(':', '%3A').replace('/', '%2F')
-    mcp_url = f"https://bedrock-agentcore.us-west-2.amazonaws.com/runtimes/{encoded_arn}/invocations?qualifier=DEFAULT"
+    mcp_url = f"https://bedrock-agentcore.{region}.amazonaws.com/runtimes/{encoded_arn}/invocations?qualifier=DEFAULT"
     headers = {"authorization": f"Bearer {bearer_token}","Content-Type":"application/json"}
     print(f"Invoking: {mcp_url}, \nwith headers: {headers}\n")
 

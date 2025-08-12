@@ -42,20 +42,11 @@ aws cognito-idp admin-set-user-password \
   --permanent > /dev/null
 echo "Cognito user password set"
 
-# Authenticate User and capture Access Token
-export BEARER_TOKEN=$(aws cognito-idp initiate-auth \
-  --client-id "$CLIENT_ID" \
-  --auth-flow USER_PASSWORD_AUTH \
-  --auth-parameters USERNAME='testuser',PASSWORD='PERMANENT_PASSWORD' \
-  --region $AWS_REGION | jq -r '.AuthenticationResult.AccessToken')
-echo "Bearer Token: $BEARER_TOKEN"
-
 # Save the variables POOL_ID, Discovery URL, CLIENT_ID, and BEARER_TOKEN in `.env`
 cat << EOF > .env
 POOL_ID=$POOL_ID
 DISCOVERY_URL=https://cognito-idp.$AWS_REGION.amazonaws.com/$POOL_ID/.well-known/openid-configuration
 CLIENT_ID=$CLIENT_ID
-BEARER_TOKEN=$BEARER_TOKEN
 EOF
 
 # Output the required values
