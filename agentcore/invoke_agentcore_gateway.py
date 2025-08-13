@@ -3,6 +3,7 @@
 # This code has been adapted from:
 # https://github.com/awslabs/amazon-bedrock-agentcore-samples/blob/main/01-tutorials/02-AgentCore-gateway/01-transform-lambda-into-mcp-tools/01-gateway-target-lambda.ipynb
 
+import json
 import logging
 import os
 import utils
@@ -124,7 +125,7 @@ def invoke_agentcore_gateway():
             arguments={"orderId": "123"}
         )
         # Print the MCP Tool response
-        tool_call_result = result['content'][0]['text']
+        tool_call_result = json.loads(result['content'][0]['text'])
         print(f"\nTool Call result:\n{json.dumps(tool_call_result, indent=2, default=str)}")
 
 
