@@ -4,6 +4,7 @@
 # https://github.com/awslabs/amazon-bedrock-agentcore-samples/blob/main/01-tutorials/02-AgentCore-gateway/01-transform-lambda-into-mcp-tools/01-gateway-target-lambda.ipynb
 
 import boto3
+import json
 import os
 import requests
 import time
@@ -22,7 +23,7 @@ cognito = boto3.client("cognito-idp", region_name=REGION)
 gateway_client = boto3.client('bedrock-agentcore-control', region_name = REGION)
 
 
-def create_gateway_lambda(lambda_zip):
+def create_lambda_target(lambda_zip):
     """
     Creates a Lambda function from a zip file to be used as a gateway target.
     
@@ -39,6 +40,8 @@ def create_gateway_lambda(lambda_zip):
         raise Exception(f"Lambda function code zip file not found. Please ensure the file '{lambda_zip}' exists in the current directory.")
 
     lambda_resp = utils.create_gateway_lambda(lambda_zip)
+    print(json.dumps(lambda_resp, indent=2, default=str))
+
     if lambda_resp is not None:
         if lambda_resp['exit_code'] == 0:
             lambda_arn = lambda_resp['lambda_function_arn']
@@ -63,7 +66,7 @@ def create_gateway_role(role_name):
     """
     agentcore_gateway_iam_role = utils.create_agentcore_gateway_role(role_name)
     gateway_role_arn = agentcore_gateway_iam_role['Role']['Arn']
-    print("Agentcore gateway role ARN: ", role_arn)
+    print("Agentcore gateway role ARN: ", gateway_role_arn)
     return gateway_role_arn
 
 
@@ -150,12 +153,14 @@ def create_agentcore_gateway(client_id, cognito_discovery_url, gateway_name, gat
     return create_response
 
 
-def create_aws_lambda_target(lambda_arn):
+def create_aws_lambda_target(lambda_arn: str, gatewayID: str, targetname: str):
     """
     Creates an AWS Lambda target and transforms it into MCP tools for use with AgentCore gateway.
     
     Args:
         lambda_arn (str): ARN of the Lambda function to use as the target
+        gatewayID (str): ID of the gateway to associate the target with
+        targetname (str): Name to give the gateway target
         
     Returns:
         dict: Response from the create_gateway_target API call containing details of the created target
@@ -165,6 +170,7 @@ def create_aws_lambda_target(lambda_arn):
     2. Sets up IAM role-based credentials for the target
     3. Creates the gateway target with the specified configuration
     """
+
     lambda_target_config = {
         "mcp": {
             "lambda": {
@@ -213,7 +219,6 @@ def create_aws_lambda_target(lambda_arn):
         }
     ]
 
-    targetname='LambdaUsingSDK'
     response = gateway_client.create_gateway_target(
         gatewayIdentifier=gatewayID,
         name=targetname,
@@ -227,7 +232,7 @@ def create_aws_lambda_target(lambda_arn):
 
 def main():
     lambda_zip = 'lambda_function_code.zip'
-    lambda_arn = create_gateway_lambda(lambda_zip)
+    lambda_arn = create_lambda_target(lambda_zip)
     gateway_role_arn = create_gateway_role(role_name = "sample-lambdagateway")
     cognito_data = create_cognito_resources()
 
@@ -242,7 +247,7 @@ def main():
     gatewayURL = create_response["gatewayUrl"]
     print(f'Gateway ID: {gatewayID}')
 
-    create_aws_lambda_target(lambda_arn)
+    create_aws_lambda_target(lambda_arn, gatewayID, targetname='LambdaUsingSDK')
 
 
 if __name__ == '__main__':
