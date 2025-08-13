@@ -34,7 +34,7 @@ def print_header(header):
     print('=' * 80 + '\n' + header + '\n' + '=' * 80)
 
 
-def deploy_inbound():
+def main():
     client_id, discovery_url = step_01_setup_cognito()
     launch_result, agentcore_runtime = step_02_deployagentcore(client_id, discovery_url)
 
@@ -60,14 +60,5 @@ def deploy_inbound():
         print()
 
 
-def main(args):
-    if args.deploy_inbound:
-        deploy_inbound()
-
-
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--deploy-inbound', action='store_true', help='Deploy inbound agentcore')
-    parser.add_argument('--deploy-outbound', action='store_true', help='Deploy outbound agentcore')
-    args = parser.parse_args()
-    main(args)
+    main()
