@@ -109,7 +109,8 @@ def create_cognito_resources():
         'user_pool_id': user_pool_id,
         'client_id': client_id,
         'client_secret': client_secret,
-        'cognito_discovery_url': cognito_discovery_url
+        'cognito_discovery_url': cognito_discovery_url,
+        'scopeString': scopeString
     }
 
 
@@ -231,11 +232,15 @@ def create_aws_lambda_target(lambda_arn: str, gatewayID: str, targetname: str):
 
 
 def main():
+    print('(1) Creating Lambda Function')
     lambda_zip = 'lambda_function_code.zip'
     lambda_arn = create_lambda_target(lambda_zip)
     gateway_role_arn = create_gateway_role(role_name = "sample-lambdagateway")
+
+    print("\n(2) Creating Cognito Resources.....")
     cognito_data = create_cognito_resources()
 
+    print('\n(3) Creating AgentCore Gateway.....')
     create_response = create_agentcore_gateway(
         client_id = cognito_data['client_id'],
         cognito_discovery_url = cognito_data['cognito_discovery_url'],
@@ -247,8 +252,19 @@ def main():
     gatewayURL = create_response["gatewayUrl"]
     print(f'Gateway ID: {gatewayID}')
 
-    create_aws_lambda_target(lambda_arn, gatewayID, targetname='LambdaUsingSDK')
+    print('\n(4) Creating Gateway Target.....')
+    TARGET_NAME = 'LambdaUsingSDK'
+    response = create_aws_lambda_target(lambda_arn, gatewayID, targetname=TARGET_NAME)
+    print(json.dumps(response, indent=2, default=str))
 
+    # Save user_pool_id, client_id, client_secret in .env
+    with open('.env', 'w') as f:
+        f.write(f'USER_POOL_ID={cognito_data["user_pool_id"]}\n')
+        f.write(f'CLIENT_ID={cognito_data["client_id"]}\n')
+        f.write(f'CLIENT_SECRET={cognito_data["client_secret"]}\n')
+        f.write(f'SCOPE_STRING={cognito_data["scopeString"]}\n')
+        f.write(f'GATEWAY_URL={gatewayURL}\n')
+        f.write(f'TARGET_NAME={TARGET_NAME}\n')
 
 if __name__ == '__main__':
     main()
