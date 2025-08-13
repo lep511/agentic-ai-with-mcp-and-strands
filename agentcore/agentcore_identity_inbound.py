@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 import json
 
 from deploy_to_agentcore import deploy_agentcore_with_cognito_jwt
@@ -33,22 +34,40 @@ def print_header(header):
     print('=' * 80 + '\n' + header + '\n' + '=' * 80)
 
 
-def main():
+def deploy_inbound():
     client_id, discovery_url = step_01_setup_cognito()
     launch_result, agentcore_runtime = step_02_deployagentcore(client_id, discovery_url)
 
     print_header('Invoking AgentCore Runtime without authorization')
-    invoke_response = agentcore_runtime.invoke({"prompt": "How is the weather now?"})
-    print(json.dumps(invoke_response, indent=2, default=str))
+    try:
+        invoke_response = agentcore_runtime.invoke({"prompt": "How is the weather now?"})
+        print(json.dumps(invoke_response, indent=2, default=str))
+    except Exception as e:
+        print(f"Error invoking AgentCore: {e}")
+        print()
 
     print_header('Invoking AgentCore Runtime with authorization')
     bearer_token = reauthenticate_user(client_id)
-    invoke_response = agentcore_runtime.invoke(
-        {"prompt": "How is the weather now?"}, 
-        bearer_token=bearer_token
-    )
-    print(json.dumps(invoke_response, indent=2, default=str))
+
+    try:
+        invoke_response = agentcore_runtime.invoke(
+            {"prompt": "How is the weather now?"}, 
+            bearer_token=bearer_token
+        )
+        print(json.dumps(invoke_response, indent=2, default=str))
+    except Exception as e:
+        print(f"Error invoking AgentCore: {e}")
+        print()
+
+
+def main(args):
+    if args.deploy_inbound:
+        deploy_inbound()
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--deploy-inbound', action='store_true', help='Deploy inbound agentcore')
+    parser.add_argument('--deploy-outbound', action='store_true', help='Deploy outbound agentcore')
+    args = parser.parse_args()
+    main(args)
