@@ -24,12 +24,14 @@ https://github.com/awslabs/amazon-bedrock-agentcore-samples/blob/main/01-tutoria
 """
 
 import argparse
+import os
 import time
+
 from bedrock_agentcore_starter_toolkit import Runtime
 from boto3.session import Session
 
 boto_session = Session()
-region = boto_session.region_name
+region = os.getenv('AWS_REGION', 'us-west-2')
 
 agentcore_runtime = Runtime()
 
@@ -53,7 +55,17 @@ def deploy_agentcore(agent_name, entry_point, requirements_file = 'requirements.
         requirements_file (str, optional): Path to requirements.txt file. Defaults to 'requirements.txt'
 
     Returns:
-        None
+        dict: Launch result containing deployment status and endpoint information
+
+    Raises:
+        RuntimeError: If configuration or launch fails
+        ValueError: If required parameters are invalid
+
+    Example:
+        result = deploy_agentcore(
+            agent_name="my-agent",
+            entry_point="agent.py"
+        )
     """
     response = agentcore_runtime.configure(
         entrypoint=entry_point,
@@ -64,6 +76,52 @@ def deploy_agentcore(agent_name, entry_point, requirements_file = 'requirements.
         agent_name=agent_name
     )
     launch_result = agentcore_runtime.launch()
+    return launch_result, agentcore_runtime
+
+
+def deploy_agentcore_with_cognito_jwt(agent_name, entry_point, discovery_url, client_id, requirements_file = 'requirements.txt'):
+    """
+    Deploy an Amazon Bedrock Agent Core runtime with Cognito JWT authorization configuration.
+
+    Args:
+        agent_name (str): Name of the agent to deploy
+        entry_point (str): Path to the entry point file for the agent
+        discovery_url (str): Cognito user pool discovery URL for JWT validation
+        client_id (str): Cognito app client ID to allow access
+        requirements_file (str, optional): Path to requirements.txt file. Defaults to 'requirements.txt'
+
+    Returns:
+        dict: Launch result containing deployment status and endpoint information
+
+    Raises:
+        RuntimeError: If configuration or launch fails
+        ValueError: If required parameters are invalid
+
+    Example:
+        result = deploy_agentcore_with_cognito_jwt(
+            agent_name="my-agent",
+            entry_point="agent.py",
+            discovery_url="https://cognito-idp.region.amazonaws.com/userpool/.well-known/openid-configuration",
+            client_id="abc123def456"
+        )
+    """
+    response = agentcore_runtime.configure(
+        entrypoint=entry_point,
+        auto_create_execution_role=True,
+        auto_create_ecr=True,
+        requirements_file=requirements_file,
+        region=region,
+        agent_name=agent_name,
+        authorizer_configuration={
+            "customJWTAuthorizer": {
+                "discoveryUrl": discovery_url,
+                "allowedClients": [client_id]
+            }
+        }
+    )
+    launch_result = agentcore_runtime.launch()
+    return launch_result, agentcore_runtime
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
