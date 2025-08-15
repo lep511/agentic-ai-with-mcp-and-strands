@@ -40,11 +40,14 @@ def main():
 
     print_header('Invoking AgentCore Runtime without authorization')
     try:
-        invoke_response = agentcore_runtime.invoke({"prompt": "How is the weather now?"})
+        invoke_response = agentcore_runtime.invoke(
+            {"prompt": "How is the weather now?"}
+        )
+        print('✅ Successfully invoked AgentCore Runtime')
         print(json.dumps(invoke_response, indent=2, default=str))
     except Exception as e:
-        print(f"Error invoking AgentCore: {e}")
-        print()
+        print(f'❌ Error invoking AgentCore Runtime')
+        print(f'{e}\n')
 
     print_header('Invoking AgentCore Runtime with authorization')
     bearer_token = reauthenticate_user(client_id)
@@ -54,10 +57,11 @@ def main():
             {"prompt": "How is the weather now?"}, 
             bearer_token=bearer_token
         )
+        print('✅ Successfully invoked AgentCore Runtime')
         print(json.dumps(invoke_response, indent=2, default=str))
     except Exception as e:
-        print(f"Error invoking AgentCore: {e}")
-        print()
+        print(f'❌ Error invoking AgentCore Runtime')
+        print(f'{e}\n')
 
 
 if __name__ == '__main__':
