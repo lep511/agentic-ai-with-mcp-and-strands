@@ -38,7 +38,7 @@ def main():
     client_id, discovery_url = step_01_setup_cognito()
     launch_result, agentcore_runtime = step_02_deployagentcore(client_id, discovery_url)
 
-    print_header('Invoking AgentCore Runtime without authorization')
+    print_header('Invoking AgentCore Runtime without authorization (this should fail)')
     try:
         invoke_response = agentcore_runtime.invoke(
             {"prompt": "How is the weather now?"}
@@ -49,7 +49,7 @@ def main():
         print(f'❌ Error invoking AgentCore Runtime')
         print(f'{e}\n')
 
-    print_header('Invoking AgentCore Runtime with authorization')
+    print_header('Invoking AgentCore Runtime with authorization (this should succeed)')
     bearer_token = reauthenticate_user(client_id)
 
     try:
