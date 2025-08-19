@@ -36,6 +36,20 @@ region = os.getenv('AWS_REGION', 'us-west-2')
 agentcore_runtime = Runtime()
 
 def wait_for_status():
+    """
+    Wait for the AgentCore runtime deployment to reach a terminal status.
+    
+    Polls the runtime status every 10 seconds until one of the following statuses is reached:
+    - READY: Deployment completed successfully
+    - CREATE_FAILED: Deployment creation failed
+    - DELETE_FAILED: Deployment deletion failed  
+    - UPDATE_FAILED: Deployment update failed
+    
+    Prints the current status at each poll interval.
+    
+    Returns:
+        None
+    """
     status_response = agentcore_runtime.status()
     status = status_response.endpoint['status']
     end_status = ['READY', 'CREATE_FAILED', 'DELETE_FAILED', 'UPDATE_FAILED']
@@ -45,7 +59,7 @@ def wait_for_status():
         status = status_response.endpoint['status']
         print(status)
 
-def deploy_agentcore(agent_name, entry_point, requirements_file = 'requirements.txt'):
+def deploy_agentcore(agent_name: str, entry_point: str, requirements_file: str = 'requirements.txt', local_build: bool = False):
     """
     Deploy an Amazon Bedrock Agent Core runtime with the specified configuration.
 
@@ -53,16 +67,19 @@ def deploy_agentcore(agent_name, entry_point, requirements_file = 'requirements.
         agent_name (str): Name of the agent to deploy
         entry_point (str): Path to the entry point file for the agent
         requirements_file (str, optional): Path to requirements.txt file. Defaults to 'requirements.txt'
+        local_build (bool, optional): Whether to build the container locally. Defaults to False
 
     Returns:
-        dict: Launch result containing deployment status and endpoint information
+        Tuple[dict, Runtime]: Tuple containing:
+            - Launch result containing deployment status and endpoint information
+            - AgentCore runtime instance
 
     Raises:
         RuntimeError: If configuration or launch fails
         ValueError: If required parameters are invalid
 
     Example:
-        result = deploy_agentcore(
+        result, runtime = deploy_agentcore(
             agent_name="my-agent",
             entry_point="agent.py"
         )
@@ -75,11 +92,13 @@ def deploy_agentcore(agent_name, entry_point, requirements_file = 'requirements.
         region=region,
         agent_name=agent_name
     )
-    launch_result = agentcore_runtime.launch()
+    launch_result = agentcore_runtime.launch(
+        local_build=local_build
+    )
     return launch_result, agentcore_runtime
 
 
-def deploy_agentcore_with_cognito_jwt(agent_name, entry_point, discovery_url, client_id, requirements_file = 'requirements.txt'):
+def deploy_agentcore_with_cognito_jwt(agent_name: str, entry_point: str, discovery_url: str, client_id: str, requirements_file: str = 'requirements.txt', local_build: bool = False):
     """
     Deploy an Amazon Bedrock Agent Core runtime with Cognito JWT authorization configuration.
 
@@ -89,16 +108,19 @@ def deploy_agentcore_with_cognito_jwt(agent_name, entry_point, discovery_url, cl
         discovery_url (str): Cognito user pool discovery URL for JWT validation
         client_id (str): Cognito app client ID to allow access
         requirements_file (str, optional): Path to requirements.txt file. Defaults to 'requirements.txt'
+        local_build (bool, optional): Whether to build the container locally. Defaults to False
 
     Returns:
-        dict: Launch result containing deployment status and endpoint information
+        Tuple[dict, Runtime]: Tuple containing:
+            - Launch result containing deployment status and endpoint information
+            - AgentCore runtime instance
 
     Raises:
         RuntimeError: If configuration or launch fails
         ValueError: If required parameters are invalid
 
     Example:
-        result = deploy_agentcore_with_cognito_jwt(
+        result, runtime = deploy_agentcore_with_cognito_jwt(
             agent_name="my-agent",
             entry_point="agent.py",
             discovery_url="https://cognito-idp.region.amazonaws.com/userpool/.well-known/openid-configuration",
@@ -119,7 +141,9 @@ def deploy_agentcore_with_cognito_jwt(agent_name, entry_point, discovery_url, cl
             }
         }
     )
-    launch_result = agentcore_runtime.launch()
+    launch_result = agentcore_runtime.launch(
+        local_build=local_build
+    )
     return launch_result, agentcore_runtime
 
 
@@ -127,10 +151,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--agent_name', type=str, help='Name of the agent to deploy')
     parser.add_argument('--entry_point', type=str, help='Entry point file for the agent')
+    parser.add_argument('--local_build', action='store_true', help='Use local build (only for arm64 platforms)')
     args = parser.parse_args()
 
     deploy_agentcore(
         agent_name = args.agent_name,
-        entry_point = args.entry_point
+        entry_point = args.entry_point,
+        local_build = args.local_build
     )
     wait_for_status()
