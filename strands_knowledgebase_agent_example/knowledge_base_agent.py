@@ -131,7 +131,7 @@ def run_kb_agent(query):
         result = agent.tool.memory(
             action="retrieve", 
             query=query,
-            min_score=0.001,  # Set minimum score threshold (adjust lower if retrievals fail, adjust higher to avoid hallucinations)
+            min_score=0.0001, # Set minimum score threshold (adjust lower if retrievals fail, adjust higher to avoid hallucinations)
             max_results=9     # Retrieve a good number of results
         )
         # Convert the result to a string to extract just the content text
