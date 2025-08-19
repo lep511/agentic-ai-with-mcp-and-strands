@@ -121,7 +121,10 @@ def run_kb_agent(query):
     
     if action == "store":
         # For store actions, store the full query
-        agent.tool.memory(action="store", content=query)
+        result = agent.tool.memory(
+            action="store",
+            content=query
+        )
         print("\nI've stored this information.")
     else:
         # For retrieve actions, query the knowledge base with appropriate parameters
