@@ -26,7 +26,7 @@ def step_02_deployagentcore(client_id, discovery_url):
         entry_point="strands_claude.py",
         discovery_url=discovery_url,
         client_id=client_id,
-        local_build=True
+        local_build=True  # Remove this, if on x86
     )
 
 
