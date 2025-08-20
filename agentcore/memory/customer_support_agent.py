@@ -166,6 +166,9 @@ def main():
     client = MemoryClient(region_name=region)
     memory_name = "CustomerSupportMemory"
 
+    # Initialize memory_id to prevent UnboundLocalError
+    memory_id = None
+    
     # Define memory strategies for customer support
     strategies = [
         {
@@ -205,13 +208,11 @@ def main():
         logger.info(f"❌ ERROR: {e}")
         import traceback
         traceback.print_exc()
-        # Cleanup on error - delete the memory if it was partially created
-        if memory_id:
-            try:
-                client.delete_memory_and_wait(memoryId=memory_id,max_wait = 300)
-                logger.info(f"Cleaned up memory: {memory_id}")
-            except Exception as cleanup_error:
-                logger.info(f"Failed to clean up memory: {cleanup_error}")
+        return
+    
+    if not memory_id:
+        logger.error("Failed to create or retrieve memory ID")
+        return
 
     strategies = client.get_memory_strategies(memory_id)
     print(json.dumps(strategies, indent=2, default=str))
