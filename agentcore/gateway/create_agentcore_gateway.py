@@ -7,10 +7,17 @@ import boto3
 import json
 import os
 import requests
+import sys
 import time
-import utils
 
 from botocore.exceptions import ClientError
+
+# Add '..' folder to path, which is expected to contain agencore_utils.py
+parent_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(parent_path)
+print(f'Added path: {parent_path}')
+
+import agentcore_utils
 
 
 REGION = os.getenv('AWS_REGION', 'us-west-2')
@@ -39,7 +46,7 @@ def create_lambda_target(lambda_zip):
     if not os.path.isfile(lambda_zip):
         raise Exception(f"Lambda function code zip file not found. Please ensure the file '{lambda_zip}' exists in the current directory.")
 
-    lambda_resp = utils.create_gateway_lambda(lambda_zip)
+    lambda_resp = agentcore_utils.create_gateway_lambda(lambda_zip)
     print(json.dumps(lambda_resp, indent=2, default=str))
 
     if lambda_resp is not None:
@@ -64,7 +71,7 @@ def create_gateway_role(role_name):
     Raises:
         Exception: If role creation fails
     """
-    agentcore_gateway_iam_role = utils.create_agentcore_gateway_role(role_name)
+    agentcore_gateway_iam_role = agentcore_utils.create_agentcore_gateway_role(role_name)
     gateway_role_arn = agentcore_gateway_iam_role['Role']['Arn']
     print("Agentcore gateway role ARN: ", gateway_role_arn)
     return gateway_role_arn
@@ -93,13 +100,13 @@ def create_cognito_resources():
     ]
     scopeString = f'{RESOURCE_SERVER_ID}/gateway:read {RESOURCE_SERVER_ID}/gateway:write'
     print('Creating or retrieving Cognito resources...')
-    user_pool_id = utils.get_or_create_user_pool(cognito, USER_POOL_NAME)
+    user_pool_id = agentcore_utils.get_or_create_user_pool(cognito, USER_POOL_NAME)
     print(f'User Pool ID: {user_pool_id}')
 
-    utils.get_or_create_resource_server(cognito, user_pool_id, RESOURCE_SERVER_ID, RESOURCE_SERVER_NAME, SCOPES)
+    agentcore_utils.get_or_create_resource_server(cognito, user_pool_id, RESOURCE_SERVER_ID, RESOURCE_SERVER_NAME, SCOPES)
     print('Resource server ensured.')
 
-    client_id, client_secret  = utils.get_or_create_m2m_client(cognito, user_pool_id, CLIENT_NAME, RESOURCE_SERVER_ID)
+    client_id, client_secret  = agentcore_utils.get_or_create_m2m_client(cognito, user_pool_id, CLIENT_NAME, RESOURCE_SERVER_ID)
     print(f'Client ID: {client_id}')
 
     # Get discovery URL  
