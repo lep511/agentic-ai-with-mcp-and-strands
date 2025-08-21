@@ -108,7 +108,7 @@ def web_search(query: str, max_results: int = 3):
         )
     else:
         response = DDGS().text(
-            "python programming",
+            query,
             max_results = max_results
         )
     print(json.dumps(response, indent=2, default=str))
