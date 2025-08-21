@@ -10,7 +10,7 @@ sys.path.append(parent_path)
 print(f'Added path: {parent_path}')
 
 from deploy_to_agentcore import deploy_agentcore_with_cognito_jwt
-from utils01 import setup_cognito_user_pool, reauthenticate_user
+from agentcore_utils import setup_cognito_user_pool, reauthenticate_user
 
 
 discovery_url = None
@@ -23,7 +23,8 @@ def step_01_setup_cognito():
     print("Cognito setup completed ✓")
     discovery_url = cognito_config.get("discovery_url")
     client_id = cognito_config.get("client_id")
-    return client_id, discovery_url
+    pool_id = cognito_config.get("pool_id")
+    return client_id, discovery_url, pool_id
 
 
 def step_02_deployagentcore(client_id, discovery_url):
@@ -42,7 +43,7 @@ def print_header(header):
 
 
 def main():
-    client_id, discovery_url = step_01_setup_cognito()
+    client_id, discovery_url, pool_id = step_01_setup_cognito()
     launch_result, agentcore_runtime = step_02_deployagentcore(client_id, discovery_url)
 
     print_header('Invoking AgentCore Runtime without authorization (this should fail)')
@@ -57,7 +58,7 @@ def main():
         print(f'{e}\n')
 
     print_header('Invoking AgentCore Runtime with authorization (this should succeed)')
-    bearer_token = reauthenticate_user(client_id)
+    bearer_token = reauthenticate_user(client_id, pool_id)
 
     try:
         invoke_response = agentcore_runtime.invoke(
