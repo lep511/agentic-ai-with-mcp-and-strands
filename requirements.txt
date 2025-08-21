@@ -12,3 +12,4 @@ tavily-python
 tqdm
 uv
 strands-agents[litellm]
+ddgs
