@@ -4,13 +4,13 @@ import boto3
 from botocore.exceptions import ClientError
 from pprint import pprint
 
-# Setup path for utils
+# Setup path for agentcore_utils
 if '__file__' in globals():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 else:
     current_dir = os.getcwd()
 sys.path.insert(0, os.path.join(current_dir, '..'))
-import utils
+import agentcore_utils as utils
 
 # Constants
 REGION = os.environ.get('AWS_REGION', 'us-west-2')
