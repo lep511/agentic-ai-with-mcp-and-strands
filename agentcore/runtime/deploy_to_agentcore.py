@@ -151,14 +151,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--agent_name', type=str, help='Name of the agent to deploy')
     parser.add_argument('--entry_point', type=str, help='Entry point file for the agent')
-    parser.add_argument('--req_file', type=str, help='File path for requirements.txt')
     parser.add_argument('--local_build', action='store_true', help='Use local build (only for arm64 platforms)')
     args = parser.parse_args()
 
     deploy_agentcore(
         agent_name = args.agent_name,
         entry_point = args.entry_point,
-        requirements_file = args.req_file,
         local_build = args.local_build
     )
     wait_for_status()
