@@ -84,11 +84,12 @@ def get_or_generate_password(pool_id, username):
         return password
 
 
-def get_password_from_parameter_store(client_id, username):
+def get_password_from_parameter_store(client_id, pool_id, username):
     """Retrieve password from Parameter Store using client_id to find pool_id.
     
     Args:
         client_id (str): Cognito User Pool Client ID
+        pool_id (str): Cognito User Pool ID
         username (str): Username to retrieve password for
         
     Returns:
@@ -97,12 +98,15 @@ def get_password_from_parameter_store(client_id, username):
     Raises:
         ClientError: If client_id is invalid or parameter not found
     """
-    cognito_client = boto3.client('cognito-idp')
+    # cognito_client = boto3.client('cognito-idp')
     ssm = boto3.client('ssm')
     
     # Get pool_id from client_id
-    response = cognito_client.describe_user_pool_client(ClientId=client_id)
-    pool_id = response['UserPoolClient']['UserPoolId']
+    # response = cognito_client.describe_user_pool_client(
+    #     UserPoolId=pool_id,
+    #     ClientId=client_id
+    # )
+    # pool_id = response['UserPoolClient']['UserPoolId']
     
     param_name = f"/cognito/{pool_id}/{username}/password"
     response = ssm.get_parameter(Name=param_name, WithDecryption=True)
@@ -210,7 +214,7 @@ def setup_cognito_user_pool():
         return None
 
 
-def reauthenticate_user(client_id):
+def reauthenticate_user(client_id, pool_id):
     """Re-authenticate an existing Cognito user to obtain a new bearer token.
     
     Retrieves stored credentials from Parameter Store and performs authentication
@@ -218,7 +222,8 @@ def reauthenticate_user(client_id):
     
     Args:
         client_id (str): Cognito User Pool Client ID to authenticate against
-        
+        pool_id (str): Cognito User Pool ID
+
     Returns:
         str: New bearer token obtained from successful authentication
         
@@ -232,7 +237,7 @@ def reauthenticate_user(client_id):
     cognito_client = boto3.client('cognito-idp', region_name=region)
     # Get credentials from Parameter Store
     username = os.getenv('COGNITO_USERNAME', 'testuser')
-    password = get_password_from_parameter_store(client_id, username)
+    password = get_password_from_parameter_store(client_id, pool_id, username)
 
     # Authenticate User and get Access Token
     auth_response = cognito_client.initiate_auth(
