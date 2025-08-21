@@ -2,6 +2,12 @@
 
 import argparse
 import json
+import os
+import sys
+
+parent_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(parent_path)
+print(f'Added path: {parent_path}')
 
 from deploy_to_agentcore import deploy_agentcore_with_cognito_jwt
 from utils01 import setup_cognito_user_pool, reauthenticate_user
