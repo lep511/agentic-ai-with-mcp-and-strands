@@ -6,13 +6,20 @@
 import json
 import logging
 import os
-import utils
+import sys
 
 from dotenv import load_dotenv
 from mcp.client.streamable_http import streamablehttp_client 
 from strands import Agent
 from strands.models import BedrockModel
 from strands.tools.mcp.mcp_client import MCPClient
+
+# Add '..' folder to path, which is expected to contain agencore_utils.py
+parent_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(parent_path)
+print(f'Added path: {parent_path}')
+
+import agentcore_utils
 
 
 # Set up logging
@@ -55,7 +62,7 @@ def get_cognito_token(user_pool_id, client_id, client_secret, scopeString):
     """
 
     print("Requesting the access token from Amazon Cognito authorizer...")
-    token_response = utils.get_token(user_pool_id, client_id, client_secret, scopeString, REGION)
+    token_response = agentcore_utils.get_token(user_pool_id, client_id, client_secret, scopeString, REGION)
     return token_response["access_token"]
 
 cognito_token = get_cognito_token(
