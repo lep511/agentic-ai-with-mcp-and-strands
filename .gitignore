@@ -2,6 +2,10 @@
 nova_act_examples/logs/
 streamlit_examples/game_searches/
 
+# Chainlit
+.chainlit
+chainlit.md
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
