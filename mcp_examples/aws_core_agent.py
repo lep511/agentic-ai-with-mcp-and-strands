@@ -3,15 +3,27 @@
 """
 AWS Core MCP Server Demo
 
-A command-line interface that uses Strands and Bedrock to provide AWS service guidance.
-Connects to an AWS Core MCP server to answer questions about AWS services and best practices.
+MCP server that provides a starting point for using AWS MCP servers through a dynamic proxy server strategy based on role-based environment variables.
 
-The script:
-- Sets up logging and environment configuration
-- Initializes a Bedrock model client
-- Creates an interactive CLI loop to handle user questions
-- Uses a system prompt focused on AWS service guidance
-- Provides example prompts for common AWS tasks
+Features
+- Planning and orchestration
+  - Provides tool for prompt understanding and translation to AWS services
+- Dynamic Proxy Server Strategy
+  - The Core MCP Server implements a proxy server strategy that dynamically imports and proxies other MCP servers based on role-based environment variables. This allows you to create tailored server configurations for specific use cases or roles without having to manually configure each server.
+  - Benefits of the Proxy Server Strategy
+    Simplified Configuration: Enable multiple servers with a single environment variable
+    Reduced Duplication: Servers are imported only once, even if needed by multiple roles
+    Tailored Experience: Create custom server configurations for specific use cases
+    Flexible Deployment: Easily switch between different server configurations
+
+Usage Notes
+- If no roles are enabled, the Core MCP Server will still provide its basic functionality (prompt_understanding) but won't import any additional servers
+- You can enable multiple roles simultaneously to create a comprehensive server configuration
+- The proxy strategy ensures that each server is imported only once, even if it's needed by multiple roles
+
+Reference
+- https://github.com/awslabs/mcp/tree/main/src/core-mcp-server
+- https://github.com/awslabs/mcp/blob/main/src/core-mcp-server/awslabs/core_mcp_server/static/PROMPT_UNDERSTANDING.md
 """
 
 
@@ -47,7 +59,7 @@ stdio_mcp_client = MCPClient(lambda: stdio_client(
         command = which('uvx'),
         args = [ 'awslabs.core-mcp-server@latest' ],
         env = {
-          "FASTMCP_LOG_LEVEL": "ERROR",
+          "FASTMCP_LOG_LEVEL": os.getenv('FASTMCP_LOG_LEVEL', 'ERROR'),
           "aws-foundation": "true",
           "solutions-architect": "true"
         },
