@@ -23,6 +23,10 @@ This example demonstrates an agentic workflow using Strands agents with web rese
 1. Researcher Agent: Gathers web information using multiple tools
 2. Analyst Agent: Verifies facts and synthesizes findings
 3. Writer Agent: Creates final report
+
+If a Exa API key is provided, this agent will use Exa for web search.
+Otherwise, it will check for a Tavily API key for performing a web search with Tavily.
+If neither key is present, the agent will fall back to a web search with Duck Duck Go, that does not require an API key
 """
 
 # Dependencies:
@@ -45,6 +49,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 TAVILY_API_KEY = os.getenv('TAVILY_API_KEY', None)
+EXA_API_KEY = os.getenv('EXA_API_KEY', None)
 
 TAVILY_SYSTEM_PROMPT = """
 You are a search assistant with access to the Tavily API.
@@ -55,6 +60,21 @@ When displaying responses:
 - Format data in a human-readable way
 - Highlight important information
 - Include source URLs and keep findings under 500 words
+"""
+
+EXA_SYSTEM_PROMPT = """
+You are a search assistant with access to the Exa API.
+You can:
+1. Search the internet with a query
+2. Filter results by relevance and credibility 
+3. Extract key information from multiple sources
+
+When displaying responses:
+- Format data in a clear, structured way
+- Highlight important information with bullet points
+- Include source URLs and publication dates
+- Keep findings under 500 words
+- Prioritize recent and authoritative sources
 """
 
 DUCKDUCKGO_SYSTEM_PROMPT = """
@@ -75,33 +95,57 @@ You are a Researcher Agent that gathers information from the web.
 3. Include source URLs and keep findings under 500 words
 """
 
-if TAVILY_API_KEY:
+if EXA_API_KEY:
+    from exa_py import Exa
+    exa = Exa(api_key=EXA_API_KEY)
+    SYSTEM_PROMPT = EXA_SYSTEM_PROMPT
+    DEFAULT_SEARCH_ENGINE = "exa"
+    logger.info("Exa API key found. Using the Exa API for search queries")
+elif TAVILY_API_KEY:
     from tavily import TavilyClient
     tavily_client = TavilyClient(api_key=TAVILY_API_KEY)
     SYSTEM_PROMPT = TAVILY_SYSTEM_PROMPT
-    logger.info("Tavily API found. Using the Tavily API for search queries")
+    DEFAULT_SEARCH_ENGINE = "tavily"
+    logger.info("Tavily API key found. Using the Tavily API for search queries")
 else:
     from duckduckgo_search import DDGS
     SYSTEM_PROMPT = DUCKDUCKGO_SYSTEM_PROMPT
-    logger.info("Tavily API not found. Using the Duck Duck Go API for search queries")
+    DEFAULT_SEARCH_ENGINE = "duckduckgo"
+    logger.info("Tavily and EXA API keys not found. Falling back to the Duck Duck Go API for search queries")
 
 bedrock_model = BedrockModel(
     model_id="us.amazon.nova-lite-v1:0",
-    temperature=0.1,
+    max_tokens = 2048,
+    boto_client_config = Config(
+        read_timeout = 120,
+        connect_timeout = 120,
+        retries = dict(max_attempts=3, mode="adaptive"),
+    ),
+    temperature=0.1
 )
 
 @tool
-def web_search(query: str, max_results: int = 3):
+def web_search(query: str, max_results: int = 3, engine=DEFAULT_SEARCH_ENGINE):
     """
-    Perform an internet search with the specified query
+    Perform an internet search with the specified query using Exa, Tavily or DuckDuckGo APIs
     
     Args:
         query: A question or search phrase to perform a search with
+        max_results: Maximum number of search results to return (default: 3)
+        engine: Search engine to use - "exa", "tavily" or "duckduckgo" (default: "exa")
         
     Returns:
-        A detailed mathematical answer with explanations and steps
+        Search results containing relevant web pages from the specified search engine
     """
-    if TAVILY_API_KEY:
+
+    if engine == "exa":
+        response = exa.search_and_contents(
+            query,
+            type="auto",
+            text=True,
+            num_results = max_results
+        )
+    elif engine == "tavily":
         response = tavily_client.search(
             query,
             max_results = max_results
