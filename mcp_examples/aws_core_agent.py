@@ -53,7 +53,7 @@ HOME = os.getenv('HOME')
 BEDROCK_REGION = os.getenv("BEDROCK_REGION", 'us-west-2')
 BEDROCK_MODEL_ID = "us.amazon.nova-lite-v1:0"
 
-# AWS Documentation MCP Server
+# AWS Core MCP Server
 stdio_mcp_client = MCPClient(lambda: stdio_client(
     StdioServerParameters(
         command = which('uvx'),
