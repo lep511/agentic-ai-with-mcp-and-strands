@@ -1,7 +1,47 @@
+#!/usr/bin/env python
+
+"""
+AWS Bedrock AgentCore Runtime IAM Setup and Deployment Script
+
+This script automates the setup and deployment of an AWS Bedrock AgentCore Runtime agent by:
+
+1. Creating or retrieving an IAM role with required trust policy for bedrock-agentcore.amazonaws.com
+2. Setting up IAM policies with permissions for:
+   - Amazon ECR image access
+   - CloudWatch Logs management
+   - X-Ray tracing
+   - CloudWatch metrics publishing
+   - Bedrock model invocation
+   - AgentCore workload access token management
+3. Deploying an agent runtime using the configured IAM role and a container image from ECR
+
+Prerequisites:
+- AWS credentials configured with appropriate permissions
+- Docker image pushed to Amazon ECR
+- AWS CLI installed and configured
+
+Environment Variables:
+    AWS_DEFAULT_REGION: Target AWS region (defaults to us-west-2)
+
+Usage:
+    python deploy_agent_from_ecr.py
+
+The script will output:
+- The ARN of the created/retrieved IAM role
+- The agent runtime ARN
+- The deployment status
+
+Note: The executing role must have permissions to create/modify IAM roles and policies,
+and must include 'bedrock-agentcore.amazonaws.com' in its trust policy.
+
+Reference for trust policy and exeuction role permissions:
+    https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html
+
+"""
+
 import boto3
 import json
 import os
-import sys
 
 from typing import Dict, Any
 
