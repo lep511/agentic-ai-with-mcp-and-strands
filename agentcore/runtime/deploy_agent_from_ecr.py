@@ -39,6 +39,7 @@ Reference for trust policy and exeuction role permissions:
 
 """
 
+import argparse
 import boto3
 import json
 import os
@@ -244,13 +245,13 @@ def get_agentcore_role_arn(role_name):
     return agentcore_iam_role
 
 
-def main():
-    agentcore_iam_role = get_agentcore_role_arn(role_name)
+def main(args):
+    agentcore_iam_role = get_agentcore_role_arn(args.role_name)
     response = client.create_agent_runtime(
-        agentRuntimeName=agent_name,
+        agentRuntimeName=args.agent_name,
         agentRuntimeArtifact={
             'containerConfiguration': {
-                'containerUri': f'{account_id}.dkr.ecr.{region}.amazonaws.com/my-strands-agent:latest'
+                'containerUri': args.container_uri
             }
         },
         networkConfiguration={"networkMode": "PUBLIC"},
@@ -261,8 +262,14 @@ def main():
     print(f"Agent Runtime ARN: {response['agentRuntimeArn']}")
     print(f"Status: {response['status']}")
 
-agent_name='strands_agent'
-role_name = f'agentcore-{agent_name}-role'
+# Set defaults
+agent_name = 'strands_agent'
+container_uri = f'{account_id}.dkr.ecr.{region}.amazonaws.com/my-strands-agent:latest'
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--agent-name', type=str, default=agent_name)
+    parser.add_argument('--role-name', type=str, default=f'agentcore-{agent_name}-role')
+    parser.add_argument('--container-uri', type=str, default=container_uri)
+    args = parser.parse_args()
+    main(args)
