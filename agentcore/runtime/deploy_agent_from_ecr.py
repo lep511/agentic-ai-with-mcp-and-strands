@@ -43,6 +43,7 @@ import argparse
 import boto3
 import json
 import os
+import time
 
 from typing import Dict, Any
 
@@ -242,6 +243,7 @@ def get_agentcore_role_arn(role_name):
         assert role_name == response['role_name']
         print(f'Created Agentcore IAM role: {role_name}')
         print(f'Role ARN: {agentcore_iam_role}')
+        time.sleep(5)  # Wait 5 seconds to allow some time for the role permissions to propagate
     return agentcore_iam_role
 
 
