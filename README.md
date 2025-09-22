@@ -8,25 +8,28 @@ The framework offers a modular architecture where specialized agents can work to
 - Knowledge base integration for persistent information storage and retrieval
 - Integration with external services like weather APIs and Amazon
 - Built-in calculator functionality through MCP (Modular Communication Platform)
+- Session management with S3
 - Streamlit-based UI components for interactive applications
 
 ## Repository Structure
 ```
 strands_agents/
-├── mcp_examples/                    # Basic MCP server/client examples
-│   ├── hello_world_mcp_client.py   # Example MCP client implementation
-│   └── hello_world_mcp_server.py   # Example MCP server implementation
-├── strands_calculator_mcp_agent/    # Calculator agent using MCP
-├── strands_knowledgebase_agent/    # Knowledge storage and retrieval agent
-├── strands_memory_agent/           # Memory management agent
-├── strands_meta_tooling_agent/     # Dynamic tool creation agent
-├── strands_multi_agent/            # Multi-agent orchestration examples
-│   ├── teachers_assistant.py       # Main orchestrator agent
-│   └── specialized agents/         # Domain-specific agents (math, language, etc.)
-├── strands_nova/                   # Nova integration examples
-├── strands_weather_agent/          # Weather service integration
-├── strands_workflow_agent/         # Workflow orchestration agent
-└── streamlit_examples/             # Streamlit UI integration examples
+├── mcp_examples/                         # Basic MCP server/client examples
+│   ├── hello_world_mcp_client.py         # Example MCP client implementation
+│   └── hello_world_mcp_server.py         # Example MCP server implementation
+├── strands_calculator_mcp_agent_example/ # Calculator agent using MCP
+├── strands_knowledgebase_agent_example/  # Knowledge storage and retrieval agent
+├── strands_memory_agent_example/         # Memory management agent
+├── strands_meta_tooling_agent_example/   # Dynamic tool creation agent
+├── strands_multi_agent_example/          # Multi-agent orchestration examples
+│   ├── teachers_assistant.py             # Main orchestrator agent
+│   └── graph/                            # Multi-agent using Strands Graph primitive
+│   └── specialized agents/               # Domain-specific agents (math, language, etc.)
+├── strands_nova_example/                 # Nova integration examples
+├── strands_session_management_example/   # Session managed agent with S3
+├── strands_weather_agent_example/        # Weather service integration
+├── strands_workflow_agent_example/       # Workflow orchestration agent
+└── streamlit_examples/                   # Streamlit UI integration examples
 ```
 
 ## Usage Instructions
