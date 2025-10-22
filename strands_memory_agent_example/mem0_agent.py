@@ -55,22 +55,19 @@ def initialize_demo_memories(memory_agent) -> None:
         user_id = USER_ID
     )
 
-bedrock_model = BedrockModel(
-    model_id="anthropic.claude-3-5-sonnet-20241022-v2:0",  # "us.amazon.nova-pro-v1:0"
-    temperature=0.1,
-)
+model = BedrockModel(model_id='anthropic.claude-3-haiku-20240307-v1:0')
 
 memory_agent = Agent(
-   model=bedrock_model,  # Remove this line to use default model
+   model=model,
    system_prompt=SYSTEM_PROMPT,
    tools=[mem0_memory, use_llm],
 )
 
 def demo():
    initialize_demo_memories(memory_agent)
-   memory_agent("I work in marketing.", user_id=USER_ID)
-   memory_agent("I am 32 years old.", user_id=USER_ID)
-   memory_agent("What do you remember about me?", user_id=USER_ID)
+   memory_agent("I work in marketing.", invocation_state={"user_id": USER_ID})
+   memory_agent("I am 32 years old.", invocation_state={"user_id": USER_ID})
+   memory_agent("What do you remember about me?", invocation_state={"user_id": USER_ID})
    print()
 
 # Example usage
@@ -100,7 +97,7 @@ if __name__ == "__main__":
                 break
 
             # Call the memory agent
-            memory_agent(user_input, user_id=USER_ID)
+            memory_agent(user_input, invocation_state={"user_id": USER_ID})
 
         except KeyboardInterrupt:
             print("\n\nExecution interrupted. Exiting...")

@@ -228,7 +228,7 @@ def main():
     # Create customer support agent
     support_agent = Agent(
         hooks=[support_hooks],
-        model ="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+        model="anthropic.claude-3-5-sonnet-20241022-v2:0",
         tools=[web_search, check_order_status],
         system_prompt="""You are a helpful customer support agent with access to customer history and order information. 
         
