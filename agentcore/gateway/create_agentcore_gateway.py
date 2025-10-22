@@ -50,9 +50,9 @@ def create_lambda_target(lambda_zip):
     print(json.dumps(lambda_resp, indent=2, default=str))
 
     if lambda_resp is not None:
-        if lambda_resp['exit_code'] == 0:
+        if lambda_resp['exit_code'] in [0, 1]:  # 0=created, 1=already exists
             lambda_arn = lambda_resp['lambda_function_arn']
-            print(f"Lambda function created with ARN: {lambda_arn}")
+            print(f"Lambda function ready with ARN: {lambda_arn}")
             return lambda_arn
         else:
             raise Exception("Lambda function creation failed with message: ", lambda_resp['lambda_function_arn'])
@@ -127,7 +127,7 @@ def create_cognito_resources():
 
 def create_agentcore_gateway(client_id, cognito_discovery_url, gateway_name, gateway_role_arn):
     """
-    Creates an AgentCore gateway with Cognito JWT authorizer.
+    Creates an AgentCore gateway with Cognito JWT authorizer or returns existing one.
 
     Args:
         client_id (str): The Cognito client ID to allow access to the gateway
@@ -150,15 +150,31 @@ def create_agentcore_gateway(client_id, cognito_discovery_url, gateway_name, gat
             "discoveryUrl": cognito_discovery_url
         }
     }
-    create_response = gateway_client.create_gateway(
-        name = gateway_name,
-        roleArn = gateway_role_arn, # The IAM Role must have permissions to create/list/get/delete Gateway 
-        protocolType = 'MCP',
-        authorizerType = 'CUSTOM_JWT',
-        authorizerConfiguration = auth_config, 
-        description = 'AgentCore Gateway with AWS Lambda target type'
-    )
-    return create_response
+    
+    try:
+        create_response = gateway_client.create_gateway(
+            name = gateway_name,
+            roleArn = gateway_role_arn, # The IAM Role must have permissions to create/list/get/delete Gateway 
+            protocolType = 'MCP',
+            authorizerType = 'CUSTOM_JWT',
+            authorizerConfiguration = auth_config, 
+            description = 'AgentCore Gateway with AWS Lambda target type'
+        )
+        return create_response
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ConflictException':
+            print(f"Gateway '{gateway_name}' already exists. Finding existing gateway...")
+            # List gateways to find the existing one
+            response = gateway_client.list_gateways()
+            for gateway in response.get('items', []):
+                if gateway['name'] == gateway_name:
+                    print(f"Found existing gateway: {gateway['gatewayId']}")
+                    # Get full gateway details
+                    full_gateway = gateway_client.get_gateway(gatewayIdentifier=gateway['gatewayId'])
+                    return full_gateway
+            raise Exception(f"Gateway '{gateway_name}' exists but could not be found in list")
+        else:
+            raise e
 
 
 def create_aws_lambda_target(lambda_arn: str, gatewayID: str, targetname: str):
@@ -227,15 +243,59 @@ def create_aws_lambda_target(lambda_arn: str, gatewayID: str, targetname: str):
         }
     ]
 
-    response = gateway_client.create_gateway_target(
-        gatewayIdentifier=gatewayID,
-        name=targetname,
-        description='Lambda Target using SDK',
-        targetConfiguration=lambda_target_config,
-        credentialProviderConfigurations=credential_config
-    )
-    return response
+    try:
+        response = gateway_client.create_gateway_target(
+            gatewayIdentifier=gatewayID,
+            name=targetname,
+            description='Lambda Target using SDK',
+            targetConfiguration=lambda_target_config,
+            credentialProviderConfigurations=credential_config
+        )
+        return response
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ConflictException':
+            print(f"Target '{targetname}' already exists. Finding existing target...")
+            # List targets to find the existing one
+            response = gateway_client.list_gateway_targets(gatewayIdentifier=gatewayID)
+            for target in response.get('items', []):
+                if target['name'] == targetname:
+                    print(f"Found existing target: {target['gatewayTargetId']}")
+                    return target
+            raise Exception(f"Target '{targetname}' exists but could not be found in list")
+        else:
+            raise e
 
+
+
+def wait_for_gateway_available(gateway_id, max_wait_time=300):
+    """
+    Wait for gateway to be in AVAILABLE status before proceeding.
+    
+    Args:
+        gateway_id (str): ID of the gateway to check
+        max_wait_time (int): Maximum time to wait in seconds
+    """
+    print(f"Waiting for gateway {gateway_id} to be available...")
+    start_time = time.time()
+    
+    while time.time() - start_time < max_wait_time:
+        try:
+            response = gateway_client.get_gateway(gatewayIdentifier=gateway_id)
+            status = response.get('status')
+            print(f"Gateway status: {status}")
+            
+            if status in ['AVAILABLE', 'READY']:
+                print(f"Gateway is now {status.lower()}!")
+                return
+            elif status in ['FAILED', 'DELETING']:
+                raise Exception(f"Gateway creation failed with status: {status}")
+                
+        except ClientError as e:
+            print(f"Error checking gateway status: {e}")
+            
+        time.sleep(10)
+    
+    raise Exception(f"Gateway did not become ready within {max_wait_time} seconds")
 
 
 def main():
@@ -258,6 +318,9 @@ def main():
     gatewayID = create_response["gatewayId"]
     gatewayURL = create_response["gatewayUrl"]
     print(f'Gateway ID: {gatewayID}')
+
+    # Wait for gateway to be available before creating target
+    wait_for_gateway_available(gatewayID)
 
     print('\n(4) Creating Gateway Target.....')
     TARGET_NAME = 'LambdaUsingSDK'
