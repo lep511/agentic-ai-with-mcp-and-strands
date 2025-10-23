@@ -91,7 +91,7 @@ Always explain the weather conditions clearly and provide context for the foreca
 weather_agent = Agent(
     system_prompt=WEATHER_SYSTEM_PROMPT,
     tools=[http_request],  # Explicitly enable http_request tool
-    # model=BedrockModel(model_id="us.amazon.nova-lite-v1:0", temperature=0.1)
+    model=BedrockModel(model_id="us.amazon.nova-pro-v1:0", temperature=0.1)
 )
 
 # Example usage
