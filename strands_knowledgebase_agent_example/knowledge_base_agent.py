@@ -26,7 +26,8 @@ import os
 import sys
 from pathlib import Path
 from strands import Agent
-from strands_tools import use_llm, memory
+from strands.models import BedrockModel
+from strands_tools import memory, use_agent
 
 # Set knowledge base ID (can be overridden by environment variable)
 DEFAULT_KB_ID = "demokb123"
@@ -98,9 +99,13 @@ Example response for missing information:
 
 def determine_action(agent, query):
     """Determine if the query is a store or retrieve action."""
-    result = agent.tool.use_llm(
+    result = agent.tool.use_agent(
         prompt=f"Query: {query}",
-        system_prompt=ACTION_SYSTEM_PROMPT
+        system_prompt=ACTION_SYSTEM_PROMPT,
+        model_provider="bedrock",
+        model_settings={
+            'model_id': 'us.amazon.nova-pro-v1:0'
+        }
     )
     
     # Clean and extract the action
@@ -114,34 +119,51 @@ def determine_action(agent, query):
 
 def run_kb_agent(query):
     """Process a user query with the knowledge base agent."""
-    agent = Agent(tools=[memory, use_llm])
+    bedrock_model = BedrockModel(
+        model_id='us.amazon.nova-pro-v1:0',
+        temperature=0.1,
+    )
+    agent = Agent(
+        model=bedrock_model,
+        tools=[memory, use_agent]
+    )
     
     # Determine the action - store or retrieve
     action = determine_action(agent, query)
     
     if action == "store":
         # For store actions, store the full query
-        result = agent.tool.memory(
-            action="store",
-            content=query
-        )
-        print("\nI've stored this information.")
+        try:
+            result = agent.tool.memory(
+                action="store",
+                content=query
+            )
+            print("\nI've stored this information.")
+        except Exception as e:
+            print(f'Exception while storing memory: {e}')
     else:
         # For retrieve actions, query the knowledge base with appropriate parameters
-        result = agent.tool.memory(
-            action="retrieve", 
-            query=query,
-            min_score=0.0001, # Set minimum score threshold (adjust lower if retrievals fail, adjust higher to avoid hallucinations)
-            max_results=9     # Retrieve a good number of results
-        )
-        # Convert the result to a string to extract just the content text
-        result_str = str(result)
-        
-        # Generate a clear, conversational answer using the retrieved information
-        answer = agent.tool.use_llm(
-            prompt=f"User question: \"{query}\"\n\nInformation from knowledge base:\n{result_str}\n\nStart your answer with newline character and provide a helpful answer based on this information:",
-            system_prompt=ANSWER_SYSTEM_PROMPT
-        )
+        try:
+            result = agent.tool.memory(
+                action="retrieve", 
+                query=query,
+                min_score=0.00001, # Set minimum score threshold (adjust lower if retrievals fail, adjust higher to avoid hallucinations)
+                max_results=9      # Retrieve a good number of results
+            )
+            # Convert the result to a string to extract just the content text
+            result_str = str(result)
+            
+            # Generate a clear, conversational answer using the retrieved information
+            answer = agent.tool.use_agent(
+                prompt=f"User question: \"{query}\"\n\nInformation from knowledge base:\n{result_str}\n\nStart your answer with newline character and provide a helpful answer based on this information:",
+                system_prompt=ANSWER_SYSTEM_PROMPT,
+                model_provider="bedrock",
+                model_settings={
+                    'model_id': 'us.amazon.nova-pro-v1:0'
+                }
+            )
+        except Exception as e:
+            print(f'Exception while retrieving memory: {e}')
 
 if __name__ == "__main__":
     # Print welcome message
