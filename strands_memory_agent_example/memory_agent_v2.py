@@ -78,7 +78,8 @@ bedrock_model = BedrockModel(
 )
 
 # Set USE_AGENTCORE_MEMORY=True to use AgentCore Memory
-USE_AGENTCORE_MEMORY = os.getenv('USE_AGENTCORE_MEMORY', '')
+# USE_AGENTCORE_MEMORY = os.getenv('USE_AGENTCORE_MEMORY', '')
+USE_AGENTCORE_MEMORY = None  # Disable AgentCore Memory for now
 if USE_AGENTCORE_MEMORY:
     provider = AgentCoreMemoryToolProvider(
         memory_id="memory-123abc4567",  # Required
