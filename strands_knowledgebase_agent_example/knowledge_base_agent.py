@@ -31,7 +31,13 @@ from strands_tools import memory, use_agent
 
 # Set knowledge base ID (can be overridden by environment variable)
 DEFAULT_KB_ID = "demokb123"
-KB_ID = os.environ.get("STRANDS_KNOWLEDGE_BASE_ID")
+KB_ID = os.getenv("STRANDS_KNOWLEDGE_BASE_ID", "")
+
+# Set minimum score threshold (adjust lower if retrievals fail, adjust higher to avoid hallucinations)
+MIN_SCORE = os.getenv("MIN_SCORE", "0.000001")
+
+# Set the number of results to retrieve from the knowledge base
+MAX_RESULTS = os.getenv("MAX_RESULTS", "9")
 
 if not KB_ID:
     print("\n⚠️  Warning: STRANDS_KNOWLEDGE_BASE_ID environment variable is not set!")
@@ -147,8 +153,8 @@ def run_kb_agent(query):
             result = agent.tool.memory(
                 action="retrieve", 
                 query=query,
-                min_score=0.00001, # Set minimum score threshold (adjust lower if retrievals fail, adjust higher to avoid hallucinations)
-                max_results=9      # Retrieve a good number of results
+                min_score=float(MIN_SCORE),
+                max_results=int(MAX_RESULTS)
             )
             # Convert the result to a string to extract just the content text
             result_str = str(result)
