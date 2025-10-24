@@ -1,7 +1,7 @@
 import streamlit as st
 from strands import Agent
 from strands.models import BedrockModel
-from strands_tools import use_llm, memory
+from strands_tools import use_agent, memory
 
 # Import the specialized assistants
 from strands_multi_agent_example.computer_science_assistant import computer_science_assistant
@@ -9,6 +9,8 @@ from strands_multi_agent_example.english_assistant import english_assistant
 from strands_multi_agent_example.language_assistant import language_assistant
 from strands_multi_agent_example.math_assistant import math_assistant
 from strands_multi_agent_example.no_expertise import general_assistant
+
+import os
 
 # Define the teacher's assistant system prompt
 TEACHER_SYSTEM_PROMPT = """
@@ -114,6 +116,9 @@ Example response for missing information:
 "I don't have any information about your birthday stored."
 """
 
+# Bypass tool consent
+os.environ["BYPASS_TOOL_CONSENT"] = "true"
+
 # Set up the page
 st.set_page_config(page_title="TeachAssist - Educational Assistant", layout="wide")
 st.title("TeachAssist - Educational Assistant")
@@ -157,14 +162,14 @@ def get_kb_agent():
     # Create the knowledge base agent with memory tools
     return Agent(
         model=bedrock_model,
-        tools=[memory, use_llm],
+        tools=[memory, use_agent],
     )
 
 def determine_action(query):
     """Determine if the query should be handled by the teacher agent or knowledge base agent."""
     agent = get_kb_agent()
     
-    result = agent.tool.use_llm(
+    result = agent.tool.use_agent(
         prompt=f"Query: {query}",
         system_prompt=ACTION_SYSTEM_PROMPT
     )
@@ -183,7 +188,7 @@ def run_kb_agent(query):
     agent = get_kb_agent()
     
     # Determine the action - store or retrieve
-    result = agent.tool.use_llm(
+    result = agent.tool.use_agent(
         prompt=f"Query: {query}",
         system_prompt=KB_ACTION_SYSTEM_PROMPT
     )
@@ -208,11 +213,10 @@ def run_kb_agent(query):
         result_str = str(result)
         
         # Generate a clear, conversational answer using the retrieved information
-        answer = agent.tool.use_llm(
-            prompt=f"User question: \"{query}\"\n\nInformation from knowledge base:\n{result_str}\n\nStart your answer with newline character and provide a helpful answer based on this information:",
-            system_prompt=ANSWER_SYSTEM_PROMPT
+        answer = agent(
+            prompt=f"User question: \"{query}\"\n\nInformation from knowledge base (only use 'Response'):\n{result_str}\n\nProvide a helpful answer based on this information:",
+            invocation_state={"system_prompt": ANSWER_SYSTEM_PROMPT}
         )
-        
         return str(answer)
 
 # Get user input
