@@ -1,0 +1,41 @@
+default_agent: my_agent
+agents:
+  my_agent:
+    name: my_agent
+    entrypoint: /workspaces/agentic-ai-with-mcp-and-strands/blog-introducing-bedrock-agentCore/my_agent.py
+    platform: linux/arm64
+    container_runtime: docker
+    source_path: /workspaces/agentic-ai-with-mcp-and-strands/blog-introducing-bedrock-agentCore
+    aws:
+      execution_role: null
+      execution_role_auto_create: true
+      account: '438225447438'
+      region: us-west-2
+      ecr_repository: null
+      ecr_auto_create: true
+      network_configuration:
+        network_mode: PUBLIC
+        network_mode_config: null
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: true
+    bedrock_agentcore:
+      agent_id: null
+      agent_arn: null
+      agent_session_id: 22205a95-fd6d-4f5a-9e43-9b30de127fea
+    codebuild:
+      project_name: null
+      execution_role: null
+      source_bucket: null
+    memory:
+      mode: STM_ONLY
+      memory_id: null
+      memory_arn: null
+      memory_name: my_agent_memory
+      event_expiry_days: 30
+      first_invoke_memory_check_done: false
+      was_created_by_toolkit: false
+    authorizer_configuration: null
+    request_header_configuration: null
+    oauth_configuration: null
