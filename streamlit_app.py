@@ -172,9 +172,9 @@ model_options = [
     "us.amazon.nova-pro-v1:0",
     "us.amazon.nova-lite-v1:0",
     "us.amazon.nova-micro-v1:0",
-    "anthropic.claude-3-5-haiku-20241022-v1:0",
-    "anthropic.claude-3-7-sonnet-20250219-v1:0",
-    "anthropic.claude-sonnet-4-20250514-v1:0"
+    "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "global.anthropic.claude-sonnet-4-20250514-v1:0",
+    "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 ]
 
 selected_model = st.sidebar.selectbox(
@@ -320,8 +320,8 @@ def run_kb_agent(query):
         result = agent.tool.memory(
             action="retrieve", 
             query=query,
-            min_score=0.4,  # Set reasonable minimum score threshold
-            max_results=9   # Retrieve a good number of results
+            min_score=0.00001, # Set reasonable minimum score threshold
+            max_results=9      # Retrieve a good number of results
         )
         # Convert the result to a string to extract just the content text
         result_str = str(result)
