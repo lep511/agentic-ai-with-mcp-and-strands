@@ -40,6 +40,9 @@ def logout():
     authenticator.logout()
 
 
+# Setup SSM
+ssm = boto3.client('ssm', region_name=region)
+
 
 # Define the teacher's assistant system prompt
 TEACHER_SYSTEM_PROMPT = """
@@ -150,7 +153,11 @@ st.title("TeachAssist - Educational Assistant")
 st.write("Ask a question in any subject area or store/retrieve personal information.")
 
 # Check if OpenSearch is available
-OPENSEARCH_HOST = os.environ.get('OPENSEARCH_HOST', None)
+try:
+    response = ssm.get_parameter(Name='OPENSEARCH_HOST')
+    OPENSEARCH_HOST = response['Parameter']['Value']
+except Exception as e:
+    OPENSEARCH_HOST = os.environ.get('OPENSEARCH_HOST', None)
 has_opensearch = OPENSEARCH_HOST is not None
 
 # Sidebar configuration
